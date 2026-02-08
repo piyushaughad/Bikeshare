@@ -139,129 +139,132 @@ if bike_method == "Rent" and findmeabike == False:
     folium_static(m)  # Display the map in the Streamlit app
 
 
-# ==========================
-# RENT A BIKE
-# ==========================
-if findmeabike and input_street != "" and iamhere != "":
-    chosen_station = get_bike_availability(iamhere, data)
+# --------------------------
+# FIND A BIKE
+# --------------------------
+if findmeabike:
+    if input_street != "" and iamhere:
+        chosen_station = get_bike_availability(iamhere, data)  # Get bike availability
 
-    # Ensure we got a valid station
-    if chosen_station:
-        # Explicitly convert to correct types
-        station_id = int(chosen_station[0])
-        station_lat = float(chosen_station[1])
-        station_lon = float(chosen_station[2])
+        if chosen_station is None:
+            st.subheader(":red[No available bikes nearby!]")
+        else:
+            station_id = int(chosen_station[0])
+            station_lat = float(chosen_station[1])
+            station_lon = float(chosen_station[2])
 
-        center = iamhere  # Map center at user location
-        m1 = folium.Map(location=center, zoom_start=16, tiles="cartodbpositron")
+            center = iamhere  # Center map on user
+            m1 = folium.Map(location=center, zoom_start=16, tiles="cartodbpositron")
 
-        # Add all stations as circle markers
-        for _, row in data.iterrows():
-            marker_color = get_marker_color(row["num_bikes_available"])
-            folium.CircleMarker(
-                location=[float(row["lat"]), float(row["lon"])],
-                radius=2,
-                color=marker_color,
-                fill=True,
-                fill_color=marker_color,
-                fill_opacity=0.7,
-                popup=folium.Popup(
-                    f"Station ID: {row['station_id']}<br>"
-                    f"Bikes Available: {row['num_bikes_available']}<br>"
-                    f"Docks Available: {row['num_docks_available']}<br>"
-                    f"Capacity: {row['capacity']}",
-                    max_width=300,
-                ),
+            # Add all stations as CircleMarkers
+            for _, row in data.iterrows():
+                marker_color = get_marker_color(row["num_bikes_available"])
+                folium.CircleMarker(
+                    location=[float(row["lat"]), float(row["lon"])],
+                    radius=2,
+                    color=marker_color,
+                    fill=True,
+                    fill_color=marker_color,
+                    fill_opacity=0.7,
+                    popup=folium.Popup(
+                        f"Station ID: {row['station_id']}<br>"
+                        f"Total Bikes Available: {row['num_bikes_available']}<br>"
+                        f"Total Docks Available: {row['num_docks_available']}<br>"
+                        f"Capacity Available: {row['capacity']}",
+                        max_width=300,
+                    ),
+                ).add_to(m1)
+
+            # User location marker
+            folium.Marker(
+                location=[float(iamhere[0]), float(iamhere[1])],
+                popup="You are here.",
+                icon=folium.Icon(color="blue", icon="person", prefix="fa"),
             ).add_to(m1)
 
-        # User location marker
-        folium.Marker(
-            location=[float(iamhere[0]), float(iamhere[1])],
-            popup="You are here.",
-            icon=folium.Icon(color="blue", icon="person", prefix="fa"),
-        ).add_to(m1)
-
-        # Chosen bike station marker
-        folium.Marker(
-            location=[station_lat, station_lon],
-            popup="Rent your bike here.",
-            icon=folium.Icon(color="red", icon="bicycle", prefix="fa"),
-        ).add_to(m1)
-
-        # Draw route
-        coordinates, duration = run_osrm(
-            [station_id, station_lat, station_lon], iamhere
-        )
-        folium.PolyLine(
-            locations=coordinates,
-            color="blue",
-            weight=5,
-            tooltip=f"Travel time: {duration} min",
-        ).add_to(m1)
-
-        folium_static(m1)
-
-        # Show travel time
-        with col3:
-            st.metric(label=":green[Travel Time (min)]", value=duration)
-
-
-# ==========================
-# RETURN A BIKE
-# ==========================
-if findmeadock and input_street_return != "" and iamhere_return != "":
-    chosen_station = get_dock_availability(iamhere_return, data)
-
-    if chosen_station:
-        # Explicit type conversion
-        station_id = int(chosen_station[0])
-        station_lat = float(chosen_station[1])
-        station_lon = float(chosen_station[2])
-
-        center = iamhere_return
-        m1 = folium.Map(location=center, zoom_start=16, tiles="cartodbpositron")
-
-        for _, row in data.iterrows():
-            marker_color = get_marker_color(row["num_bikes_available"])
-            folium.CircleMarker(
-                location=[float(row["lat"]), float(row["lon"])],
-                radius=2,
-                color=marker_color,
-                fill=True,
-                fill_color=marker_color,
-                fill_opacity=0.7,
-                popup=folium.Popup(
-                    f"Station ID: {row['station_id']}<br>"
-                    f"Bikes Available: {row['num_bikes_available']}<br>"
-                    f"Docks Available: {row['num_docks_available']}<br>"
-                    f"Capacity: {row['capacity']}",
-                    max_width=300,
-                ),
+            # Chosen bike station marker
+            folium.Marker(
+                location=[station_lat, station_lon],
+                popup="Rent your bike here.",
+                icon=folium.Icon(color="red", icon="bicycle", prefix="fa"),
             ).add_to(m1)
 
-        folium.Marker(
-            location=[float(iamhere_return[0]), float(iamhere_return[1])],
-            popup="You are here.",
-            icon=folium.Icon(color="blue", icon="person", prefix="fa"),
-        ).add_to(m1)
+            # Route
+            coordinates, duration = run_osrm(chosen_station, iamhere)
+            folium.PolyLine(
+                locations=coordinates,
+                color="blue",
+                weight=5,
+                tooltip=f"it'll take you {duration} min to get here.",
+            ).add_to(m1)
 
-        folium.Marker(
-            location=[station_lat, station_lon],
-            popup="Return your bike here.",
-            icon=folium.Icon(color="red", icon="bicycle", prefix="fa"),
-        ).add_to(m1)
+            folium_static(m1)  # Display map
 
-        coordinates, duration = run_osrm(
-            [station_id, station_lat, station_lon], iamhere_return
-        )
-        folium.PolyLine(
-            locations=coordinates,
-            color="blue",
-            weight=5,
-            tooltip=f"Travel time: {duration} min",
-        ).add_to(m1)
+            with col3:
+                st.metric(label=":green[Travel Time (min)]", value=duration)
 
-        folium_static(m1)
+# --------------------------
+# FIND A DOCK
+# --------------------------
+if findmeadock:
+    if input_street_return != "" and iamhere_return:
+        chosen_station = get_dock_availability(
+            iamhere_return, data
+        )  # Get dock availability
 
-        with col3:
-            st.metric(label=":green[Travel Time (min)]", value=duration)
+        if chosen_station is None:
+            st.subheader(":red[No available docks nearby!]")
+        else:
+            station_id = int(chosen_station[0])
+            station_lat = float(chosen_station[1])
+            station_lon = float(chosen_station[2])
+
+            center = iamhere_return  # Center map on user
+            m1 = folium.Map(location=center, zoom_start=16, tiles="cartodbpositron")
+
+            # Add all stations as CircleMarkers
+            for _, row in data.iterrows():
+                marker_color = get_marker_color(row["num_bikes_available"])
+                folium.CircleMarker(
+                    location=[float(row["lat"]), float(row["lon"])],
+                    radius=2,
+                    color=marker_color,
+                    fill=True,
+                    fill_color=marker_color,
+                    fill_opacity=0.7,
+                    popup=folium.Popup(
+                        f"Station ID: {row['station_id']}<br>"
+                        f"Total Bikes Available: {row['num_bikes_available']}<br>"
+                        f"Total Docks Available: {row['num_docks_available']}<br>"
+                        f"Capacity Available: {row['capacity']}",
+                        max_width=300,
+                    ),
+                ).add_to(m1)
+
+            # User location marker
+            folium.Marker(
+                location=[float(iamhere_return[0]), float(iamhere_return[1])],
+                popup="You are here.",
+                icon=folium.Icon(color="blue", icon="person", prefix="fa"),
+            ).add_to(m1)
+
+            # Chosen dock station marker
+            folium.Marker(
+                location=[station_lat, station_lon],
+                popup="Return your bike here.",
+                icon=folium.Icon(color="red", icon="bicycle", prefix="fa"),
+            ).add_to(m1)
+
+            # Route
+            coordinates, duration = run_osrm(chosen_station, iamhere_return)
+            folium.PolyLine(
+                locations=coordinates,
+                color="blue",
+                weight=5,
+                tooltip=f"it'll take you {duration} min to get here.",
+            ).add_to(m1)
+
+            folium_static(m1)  # Display map
+
+            with col3:
+                st.metric(label=":green[Travel Time (min)]", value=duration)
