@@ -4,11 +4,14 @@ channels:
   - defaults
 
 dependencies:
-  - python=3.13
+  - python=3.8
   - pip
   - numpy
   - pandas
+  - matplotlib
+  - scipy
   - scikit-learn
+  - jupyter
   - ipykernel
   - folium
   - geopy
