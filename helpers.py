@@ -117,26 +117,19 @@ def geocode(street="", city="", country="Ireland", retries=3, delay=1):
 # Define the function to get bike availability near a location
 def get_bike_availability(latlon, df):
     df = df.copy()
-
-    # Only stations with at least one available bike
     df = df[df["num_bikes_available"] > 0]
 
     if df.empty:
-        return []  # No bikes available
+        return None  # Return None if no station found
 
-    # Calculate distance from user to each station
     df["distance"] = df.apply(
         lambda r: geodesic(latlon, (r["lat"], r["lon"])).km, axis=1
     )
-
-    # Find the closest station
     closest_idx = df["distance"].idxmin()
-    chosen_station = [
-        df.loc[closest_idx, "station_id"],
-        df.loc[closest_idx, "lat"],
-        df.loc[closest_idx, "lon"],
-    ]
 
+    chosen_station = df.loc[
+        closest_idx, ["station_id", "lat", "lon"]
+    ].to_list()  # <- convert to list of scalars
     return chosen_station
 
 
@@ -145,21 +138,16 @@ def get_dock_availability(latlon, df):
     df = df[df["num_docks_available"] > 0]
 
     if df.empty:
-        return []  # No docks available
+        return None
 
-    # Vectorized distance calculation
     df["distance"] = df.apply(
         lambda r: geodesic(latlon, (r["lat"], r["lon"])).km, axis=1
     )
-
-    # Find closest station
     closest_idx = df["distance"].idxmin()
-    chosen_station = [
-        df.loc[closest_idx, "station_id"],
-        df.loc[closest_idx, "lat"],
-        df.loc[closest_idx, "lon"],
-    ]
 
+    chosen_station = df.loc[
+        closest_idx, ["station_id", "lat", "lon"]
+    ].to_list()  # <- convert to list
     return chosen_station
 
 
