@@ -36,8 +36,11 @@ The app displays live station availability, interactive maps, and route directio
 
 .
 ├── app.py # Main Streamlit application
+
 ├── helpers.py # Helper functions (API, geocoding, routing)
+
 ├── environment.yml # Conda environment configuration
+
 └── README.md # Project documentation
 
 
