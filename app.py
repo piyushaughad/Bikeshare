@@ -5,14 +5,11 @@ from streamlit_folium import folium_static
 import time
 import json
 
-station_url = "https://tor.publicbikesystem.net/ube/gbfs/v1/en/station_status.json"
-location_url = "https://tor.publicbikesystem.net/ube/gbfs/v1/en/station_information"
-
 One_url = "https://data.smartdublin.ie/dublinbikes-api/bikes/dublin_bikes/current/stations.geojson"
 
-st.title("Toronto Bike share station status")
+st.title("Dublin Bike share station status")
 st.markdown(
-    "This Dashboard track bike availability at each bike share station in Toronto."
+    "This Dashboard track bike availability at each bike share station in Dublin."
 )
 
 
@@ -61,14 +58,11 @@ with st.sidebar:
         input_street = st.text_input("street", "")
         input_city = st.text_input("City", "Dublin")
         input_country = st.text_input("Country", "Ireland")
-        input_eircode = st.text_input("Eircode (optional)")
         drive = st.checkbox("I'm driving there")
         findmeabike = st.button("Find me a bike!", type="primary")
         if findmeabike:
             if input_street != "":
-                iamhere = geocode(
-                    input_street, input_city, input_country, input_eircode
-                )
+                iamhere = geocode(input_street, input_city, input_country)
                 if iamhere == "":
                     st.subheader(":red[Input address not valid!]")
             else:
@@ -78,7 +72,6 @@ with st.sidebar:
         input_street_return = st.text_input("street", "")
         input_city_return = st.text_input("City", "Dublin")
         input_country_return = st.text_input("Country", "Ireland")
-        input_eircode_return = st.text_input("Eircode (optional)")
         findmeadock = st.button("Find me a dock!", type="primary")
         if findmeadock:
             if input_street_return != "":
@@ -86,7 +79,6 @@ with st.sidebar:
                     input_street_return,
                     input_city_return,
                     input_country_return,
-                    input_eircode_return,
                 )
                 if iamhere_return == "":
                     st.subheader(":red[Input address not valid!]")

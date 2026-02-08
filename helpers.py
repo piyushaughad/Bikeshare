@@ -94,15 +94,9 @@ def get_marker_color(num_bikes_available):
 
 
 # Define the function to geocode an address
-def geocode(street="", city="", country="Ireland", eircode="", retries=3, delay=1):
-    # Normalize Eircode if provided
-    if eircode:
-        eircode = eircode.upper().replace(" ", "")
-        if len(eircode) == 7:  # Format as XXX XXXX
-            eircode = eircode[:3] + " " + eircode[3:]
-
-    # Combine all components into one query string
-    address_parts = [street, city, country, eircode]
+def geocode(street="", city="", country="Ireland", retries=3, delay=1):
+    # Combine all components into one query
+    address_parts = [street, city, country]
     query = " ".join([part.strip() for part in address_parts if part.strip() != ""])
 
     geolocator = Nominatim(user_agent="bikeshare_streamlit_app")
