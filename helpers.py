@@ -118,18 +118,20 @@ def geocode(street="", city="", country="Ireland", retries=3, delay=1):
 def get_bike_availability(latlon, df):
     df = df.copy()
     df = df[df["num_bikes_available"] > 0]
-
     if df.empty:
-        return None  # Return None if no station found
+        return None  # no bikes available
 
     df["distance"] = df.apply(
         lambda r: geodesic(latlon, (r["lat"], r["lon"])).km, axis=1
     )
     closest_idx = df["distance"].idxmin()
 
-    chosen_station = df.loc[
-        closest_idx, ["station_id", "lat", "lon"]
-    ].to_list()  # <- convert to list of scalars
+    # Return list of scalars
+    chosen_station = [
+        df.at[closest_idx, "station_id"],
+        df.at[closest_idx, "lat"],
+        df.at[closest_idx, "lon"],
+    ]
     return chosen_station
 
 
@@ -145,9 +147,11 @@ def get_dock_availability(latlon, df):
     )
     closest_idx = df["distance"].idxmin()
 
-    chosen_station = df.loc[
-        closest_idx, ["station_id", "lat", "lon"]
-    ].to_list()  # <- convert to list
+    chosen_station = [
+        df.at[closest_idx, "station_id"],
+        df.at[closest_idx, "lat"],
+        df.at[closest_idx, "lon"],
+    ]
     return chosen_station
 
 
